@@ -31,7 +31,12 @@ public class Flows {
     public interface Flow {
         VoidConclusion then(Runnable action);
 
-        <T> SupplierConclusion<T> thenGet(Supplier<T> supplier);
+        <T> SupplierConclusion<T> thenReturn(Supplier<T> supplier);
+        default <T> SupplierConclusion<T> thenReturn(T value) {
+            return thenReturn(() -> value);
+        }
+
+        <Ex extends Throwable> void thenThrow(Function<String, Ex> exceptionFactory, String exceptionMessage) throws Ex;
 
         class Impl implements Flow {
 
@@ -47,8 +52,13 @@ public class Flows {
             }
 
             @Override
-            public <T> SupplierConclusion<T> thenGet(Supplier<T> supplier) {
+            public <T> SupplierConclusion<T> thenReturn(Supplier<T> supplier) {
                 return new SupplierConclusion.Impl<>(condition, supplier);
+            }
+
+            @Override
+            public <Ex extends Throwable> void thenThrow(Function<String, Ex> exceptionFactory, String exceptionMessage) throws Ex {
+                if(condition.get()) throw exceptionFactory.apply(exceptionMessage);
             }
         }
 
@@ -167,10 +177,10 @@ public class Flows {
 
     public interface SupplierConclusion<T> extends ReturningConclusion<T> {
 
-        T orElseGet(Supplier<T> elseSupplier);
+        T orElse(Supplier<T> elseSupplier);
 
         default T orElse(T elseValue) {
-            return orElseGet(() -> elseValue);
+            return orElse(() -> elseValue);
         }
 
         class Impl<T> extends ReturningConclusion.Impl<T> implements SupplierConclusion<T> {
@@ -183,7 +193,7 @@ public class Flows {
             }
 
             @Override
-            public T orElseGet(Supplier<T> elseSupplier) {
+            public T orElse(Supplier<T> elseSupplier) {
                 return evaluateConditionAndConclude(elseSupplier);
             }
 
@@ -219,6 +229,9 @@ public class Flows {
     }
 
     public interface Conclusion {
+        default <Ex extends Throwable> void orElseThrow(Function<String, Ex> throwable, String message) throws Ex {
+            orElseThrow(() -> throwable.apply(message));
+        }
         <Ex extends Throwable> void orElseThrow(Supplier<Ex> throwable) throws Ex;
 
         default <Ex extends Throwable> void orElseThrowE(Ex throwable) throws Ex {
@@ -250,6 +263,10 @@ public class Flows {
     }
 
     public interface ReturningConclusion<R> {
+        default <Ex extends Throwable> R orElseThrow(Function<String, Ex> throwable, String message) throws Ex {
+            return orElseThrow(() -> throwable.apply(message));
+        }
+
         <Ex extends Throwable> R orElseThrow(Supplier<Ex> throwable) throws Ex;
 
         default <Ex extends Throwable> R orElseThrowE(Ex throwable) throws Ex {

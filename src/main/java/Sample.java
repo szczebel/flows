@@ -20,16 +20,20 @@ public class Sample {
                 .then(Sample::printLow)
                 .orElseThrow(RuntimeException::new);
 
+        String result = when(isSomeCondition())
+                .thenReturn("Yay")
+                .orElse("Nah");
+
         int result1 = when(Sample::isSomeCondition)
-                .thenGet(Sample::getHighNumber)
-                .orElseGet(Sample::getLowNumber);
+                .thenReturn(Sample::getHighNumber)
+                .orElse(Sample::getLowNumber);
 
         int result2 = when(Sample::isSomeCondition)
-                .thenGet(Sample::getHighNumber)
+                .thenReturn(Sample::getHighNumber)
                 .orElse(0);
 
         int result3 = when(Sample::isSomeCondition)
-                .thenGet(Sample::getHighNumber)
+                .thenReturn(Sample::getHighNumber)
                 .orElseThrowE(new RuntimeException());
 
         given("This")
@@ -71,6 +75,18 @@ public class Sample {
                 .when(Sample::isSomeCondition)
                 .thenReturn(Sample::getHighNumber)
                 .orElse(String::hashCode);
+
+        int result9 = given("Greetings")
+                .when(Sample::isSomeCondition)
+                .thenReturn(String::hashCode)
+                .orElseThrow(RuntimeException::new, "Exception message");
+
+        when(Sample::isSomeCondition)
+                .then(DO_NOTHING)
+                .orElseThrow(RuntimeException::new, "Exception message");
+
+        when(Sample::isSomeCondition)
+                .thenThrow(RuntimeException::new, "This was expected");
 
     }
 
