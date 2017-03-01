@@ -5,30 +5,30 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 @SuppressWarnings("SameParameterValue")
-public class Flows {
+public interface Flows {
 
-    public static final Runnable DO_NOTHING = () -> {};
-    public static <T> Consumer<T> DO_NOTHING() {
+    Runnable DO_NOTHING = () -> {};
+    static <T> Consumer<T> DO_NOTHING() {
         return t -> {};
     }
 
-    public static Flow when(Supplier<Boolean> condition) {
+    static Flow when(Supplier<Boolean> condition) {
         return new Flow.Impl(condition);
     }
 
-    public static Flow when(boolean condition) {
+    static Flow when(boolean condition) {
         return when(() -> condition);
     }
 
-    public static <T> Parametrized<T> given(T parameter) {
+    static <T> Parametrized<T> given(T parameter) {
         return given(() -> parameter);
     }
 
-    public static <T> Parametrized<T> given(Supplier<T> parameter) {
+    static <T> Parametrized<T> given(Supplier<T> parameter) {
         return new Parametrized.Impl<>(parameter);
     }
 
-    public interface Flow {
+    interface Flow {
         VoidConclusion then(Runnable action);
 
         <T> SupplierConclusion<T> thenReturn(Supplier<T> supplier);
@@ -64,7 +64,7 @@ public class Flows {
 
     }
 
-    public interface Parametrized<T> {
+    interface Parametrized<T> {
         ParameterFlow<T> when(Supplier<Boolean> condition);
 
         default ParameterFlow<T> when(boolean condition) {
@@ -86,7 +86,7 @@ public class Flows {
         }
     }
 
-    public interface ParameterFlow<T> {
+    interface ParameterFlow<T> {
         ConsumerConclusion<T> then(Consumer<T> consumer);
         <R> FunctionConclusion<T, R> thenReturn(Function<T, R> function);
         default <R> FunctionConclusion<T, R> thenReturn(Supplier<R> supplier) {
@@ -115,7 +115,7 @@ public class Flows {
         }
     }
 
-    public interface FunctionConclusion<T, R> extends ReturningConclusion<R> {
+    interface FunctionConclusion<T, R> extends ReturningConclusion<R> {
         R orElse(Function<T, R> elseFunction);
 
         default R orElse(Supplier<R> elseSupplier) {
@@ -149,7 +149,7 @@ public class Flows {
         }
     }
 
-    public interface ConsumerConclusion<T> extends Conclusion {
+    interface ConsumerConclusion<T> extends Conclusion {
         void orElse(Consumer<T> elseConsumer);
 
         class Impl<T> extends Conclusion.Impl implements ConsumerConclusion<T> {
@@ -175,7 +175,7 @@ public class Flows {
         }
     }
 
-    public interface SupplierConclusion<T> extends ReturningConclusion<T> {
+    interface SupplierConclusion<T> extends ReturningConclusion<T> {
 
         T orElse(Supplier<T> elseSupplier);
 
@@ -204,7 +204,7 @@ public class Flows {
 
     }
 
-    public interface VoidConclusion extends Conclusion {
+    interface VoidConclusion extends Conclusion {
         void orElse(Runnable action);
 
         class Impl extends Conclusion.Impl implements VoidConclusion {
@@ -228,7 +228,7 @@ public class Flows {
         }
     }
 
-    public interface Conclusion {
+    interface Conclusion {
         default <Ex extends Throwable> void orElseThrow(Function<String, Ex> throwable, String exceptionMessage) throws Ex {
             orElseThrow(() -> throwable.apply(exceptionMessage));
         }
@@ -262,7 +262,7 @@ public class Flows {
         }
     }
 
-    public interface ReturningConclusion<R> {
+    interface ReturningConclusion<R> {
         default <Ex extends Throwable> R orElseThrow(Function<String, Ex> throwable, String exceptionMessage) throws Ex {
             return orElseThrow(() -> throwable.apply(exceptionMessage));
         }

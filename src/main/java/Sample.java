@@ -8,10 +8,6 @@ public class Sample {
                 .then(Sample::printBar)
                 .orElse(Sample::printFoo);
 
-        String result = when(somethingIsTrue())
-                .thenReturn("Yay")
-                .orElse("Nah");
-
         when(Sample::somethingIsTrue)
                 .then(Sample::printBar)
                 .orElse(DO_NOTHING);
@@ -36,6 +32,10 @@ public class Sample {
         int result3 = when(Sample::somethingIsTrue)
                 .thenReturn(Sample::getHighNumber)
                 .orElseThrowE(new RuntimeException());
+
+        String result = when(somethingIsTrue())
+                .thenReturn("Yay")
+                .orElse("Nah");
 
         given("This")
                 .when(true)
