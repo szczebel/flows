@@ -129,12 +129,11 @@ public class Flows {
 
             @Override
             public R orElse(Function<T, R> elseFunction) {
-                if(condition.get()) return proceed();
-                else return elseFunction.apply(parameter.get());
+                return evaluateConditionAndConclude(()-> elseFunction.apply(parameter.get()));
             }
 
             @Override
-            R proceed() {
+            R happyPath() {
                 return function.apply(parameter.get());
             }
         }
@@ -156,12 +155,11 @@ public class Flows {
 
             @Override
             public void orElse(Consumer<T> elseConsumer) {
-                if (condition.get()) proceed();
-                else elseConsumer.accept(parameter.get());
+                evaluateConditionAndConclude(() -> elseConsumer.accept(parameter.get()));
             }
 
             @Override
-            protected void proceed() {
+            protected void happyPath() {
                 consumer.accept(parameter.get());
             }
         }
@@ -186,11 +184,10 @@ public class Flows {
 
             @Override
             public T orElseGet(Supplier<T> elseSupplier) {
-                if (condition.get()) return proceed();
-                else return elseSupplier.get();
+                return evaluateConditionAndConclude(elseSupplier);
             }
 
-            T proceed() {
+            T happyPath() {
                 return supplier.get();
             }
         }
@@ -211,12 +208,11 @@ public class Flows {
 
             @Override
             public void orElse(Runnable elseAction) {
-                if (condition.get()) proceed();
-                else elseAction.run();
+                evaluateConditionAndConclude(elseAction);
             }
 
             @Override
-            protected void proceed() {
+            protected void happyPath() {
                 action.run();
             }
         }
@@ -231,7 +227,7 @@ public class Flows {
 
         abstract class Impl implements Conclusion {
 
-            final Supplier<Boolean> condition;
+            private final Supplier<Boolean> condition;
 
             Impl(Supplier<Boolean> condition) {
                 this.condition = condition;
@@ -239,11 +235,16 @@ public class Flows {
 
             @Override
             public <Ex extends Throwable> void orElseThrow(Supplier<Ex> throwable) throws Ex {
-                if (condition.get()) proceed();
+                if (condition.get()) happyPath();
                 else throw throwable.get();
             }
 
-            protected abstract void proceed();
+            void evaluateConditionAndConclude(Runnable negativePath){
+                if(condition.get()) happyPath();
+                else negativePath.run();
+            }
+
+            protected abstract void happyPath();
 
         }
     }
@@ -257,7 +258,7 @@ public class Flows {
 
         abstract class Impl<R> implements ReturningConclusion<R> {
 
-            final Supplier<Boolean> condition;
+            private final Supplier<Boolean> condition;
 
             Impl(Supplier<Boolean> condition) {
                 this.condition = condition;
@@ -265,11 +266,16 @@ public class Flows {
 
             @Override
             public <Ex extends Throwable> R orElseThrow(Supplier<Ex> throwable) throws Ex {
-                if (condition.get()) return proceed();
+                if (condition.get()) return happyPath();
                 else throw throwable.get();
             }
 
-            abstract R proceed();
+            R evaluateConditionAndConclude(Supplier<R> negativePath) {
+                if(condition.get()) return happyPath();
+                else return negativePath.get();
+            }
+
+            abstract R happyPath();
 
         }
     }
