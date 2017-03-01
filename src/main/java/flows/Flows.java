@@ -229,8 +229,8 @@ public class Flows {
     }
 
     public interface Conclusion {
-        default <Ex extends Throwable> void orElseThrow(Function<String, Ex> throwable, String message) throws Ex {
-            orElseThrow(() -> throwable.apply(message));
+        default <Ex extends Throwable> void orElseThrow(Function<String, Ex> throwable, String exceptionMessage) throws Ex {
+            orElseThrow(() -> throwable.apply(exceptionMessage));
         }
         <Ex extends Throwable> void orElseThrow(Supplier<Ex> throwable) throws Ex;
 
@@ -263,8 +263,8 @@ public class Flows {
     }
 
     public interface ReturningConclusion<R> {
-        default <Ex extends Throwable> R orElseThrow(Function<String, Ex> throwable, String message) throws Ex {
-            return orElseThrow(() -> throwable.apply(message));
+        default <Ex extends Throwable> R orElseThrow(Function<String, Ex> throwable, String exceptionMessage) throws Ex {
+            return orElseThrow(() -> throwable.apply(exceptionMessage));
         }
 
         <Ex extends Throwable> R orElseThrow(Supplier<Ex> throwable) throws Ex;
