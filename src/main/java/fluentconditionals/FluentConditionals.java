@@ -1,14 +1,15 @@
-package flows;
+package fluentconditionals;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 @SuppressWarnings("SameParameterValue")
-public interface Flows {
+public interface FluentConditionals {
 
-    Runnable DO_NOTHING = () -> {};
-    static <T> Consumer<T> DO_NOTHING() {
+    Runnable doNothing = () -> {};
+
+    static <T> Consumer<T> ignore() {
         return t -> {};
     }
 
@@ -293,7 +294,6 @@ public interface Flows {
             }
 
             abstract R happyPath();
-
         }
     }
 }
