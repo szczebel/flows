@@ -89,6 +89,10 @@ public class Sample {
         when(Sample::somethingIsTrue)
                 .thenThrow(RuntimeException::new, "This was expected");
 
+        String message = given(SomeClass::new)
+                .when(Sample::somethingIsTrue)
+                .thenReturn(SomeClass::getMessageForLowNumber)
+                .orElse(SomeClass::getMessageForHighNumber);
     }
 
     private static int getHighNumber() {
@@ -109,5 +113,15 @@ public class Sample {
 
     private static void printBar() {
         System.out.println("Bar");
+    }
+
+    static class SomeClass {
+        String getMessageForHighNumber() {
+            return "I'm so high";
+        }
+
+        String getMessageForLowNumber() {
+            return "I'm so low";
+        }
     }
 }
