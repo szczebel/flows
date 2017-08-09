@@ -1,5 +1,6 @@
 import static fluentconditionals.FluentConditionals.*;
 
+//Task 6
 public class IfElseParametrized {
 
     public static void main(String[] args) {

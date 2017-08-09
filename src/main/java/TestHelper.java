@@ -15,24 +15,24 @@ public class TestHelper {
         return "a string";
     }
 
-    static void printFirstChar(String string) {
-        System.out.println(string.charAt(0));
-    }
-
-    static void printLastChar(String string) {
-        System.out.println(string.charAt(string.length()-1));
-    }
-
-    static RuntimeException createException() {
-        return new RuntimeException();
-    }
-
     static void printFoo() {
         System.out.println("Foo");
     }
 
     static void printBar() {
         System.out.println("Bar");
+    }
+
+    static RuntimeException createException() {
+        return new RuntimeException();
+    }
+
+    static void printFirstChar(String string) {
+        System.out.println(string.charAt(0));
+    }
+
+    static void printLastChar(String string) {
+        System.out.println(string.charAt(string.length()-1));
     }
 
     static AnotherClass extractMessageForHighNumber(SomeClass someClass) {
