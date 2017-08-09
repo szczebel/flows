@@ -1,4 +1,4 @@
-import static fluentconditionals.FluentConditionals.when;
+import static fluentconditionals.FluentConditionals.*;
 
 public class IfElseThenReturnGeneric {
 

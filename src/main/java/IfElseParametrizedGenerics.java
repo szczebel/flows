@@ -1,5 +1,4 @@
 import static fluentconditionals.FluentConditionals.given;
-import static fluentconditionals.FluentConditionals.ignore;
 
 public class IfElseParametrizedGenerics {
 
