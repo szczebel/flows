@@ -19,7 +19,7 @@ public class IfElseParametrized {
         given(TestHelper::getAString)//"a string"
                 .when(!TestHelper.somethingIsTrue())
                 .then(TestHelper::printFirstChar)
-                .orElse(ignore());
+                .orElse(doNothing());
         //nothing printed
 
         given(TestHelper::getAString)//"a string"
