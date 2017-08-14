@@ -12,11 +12,11 @@ public interface FluentConditionals {
         return t -> {};
     }
 
-    static Flow when(Supplier<Boolean> condition) {
-        return new Flow.Impl(condition);
+    static FlowEntry when(Supplier<Boolean> condition) {
+        return new FlowEntry.Impl(condition);
     }
 
-    static Flow when(boolean condition) {
+    static FlowEntry when(boolean condition) {
         return when(() -> condition);
     }
 
@@ -28,7 +28,7 @@ public interface FluentConditionals {
         return new Parametrized.Impl<>(parameter);
     }
 
-    interface Flow {
+    interface FlowEntry {
         VoidConclusion then(Runnable action);
 
         <T> SupplierConclusion<T> thenReturn(Supplier<T> supplier);
@@ -38,7 +38,7 @@ public interface FluentConditionals {
 
         <Ex extends Throwable> void thenThrow(Function<String, Ex> exceptionFactory, String exceptionMessage) throws Ex;
 
-        class Impl implements Flow {
+        class Impl implements FlowEntry {
 
             private final Supplier<Boolean> condition;
 
@@ -65,9 +65,9 @@ public interface FluentConditionals {
     }
 
     interface Parametrized<T> {
-        ParameterFlow<T> when(Supplier<Boolean> condition);
+        ParametrizedFlowEntry<T> when(Supplier<Boolean> condition);
 
-        default ParameterFlow<T> when(boolean condition) {
+        default ParametrizedFlowEntry<T> when(boolean condition) {
             return when(() -> condition);
         }
 
@@ -80,20 +80,20 @@ public interface FluentConditionals {
             }
 
             @Override
-            public ParameterFlow<T> when(Supplier<Boolean> condition) {
-                return new ParameterFlow.Impl<>(condition, parameter);
+            public ParametrizedFlowEntry<T> when(Supplier<Boolean> condition) {
+                return new ParametrizedFlowEntry.Impl<>(condition, parameter);
             }
         }
     }
 
-    interface ParameterFlow<T> {
+    interface ParametrizedFlowEntry<T> {
         ConsumerConclusion<T> then(Consumer<T> consumer);
         <R> FunctionConclusion<T, R> thenReturn(Function<T, R> function);
         default <R> FunctionConclusion<T, R> thenReturn(Supplier<R> supplier) {
             return thenReturn(t -> supplier.get());
         }
 
-        class Impl<T> implements ParameterFlow<T> {
+        class Impl<T> implements ParametrizedFlowEntry<T> {
 
             private final Supplier<Boolean> condition;
             private final Supplier<T> parameter;
