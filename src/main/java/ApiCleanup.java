@@ -7,20 +7,30 @@ public class ApiCleanup {
         //these should not execute anything
         // - unfinished statements (missing orElse/orElseThrow)
 
-        when(TestHelper::somethingIsTrue)
+        when(ApiCleanup::veryComplexCondition)
                 .then(TestHelper::printBar);
+        //"Evaluating condition" should NOT be printed
+        //"Bar" should NOT be printed
 
         given(TestHelper::getAString)
-                .when(TestHelper::somethingIsTrue)
+                .when(ApiCleanup::veryComplexCondition)
                 .then(TestHelper::printFirstChar);
+        //"Evaluating condition" should NOT be printed
+        //"a" should NOT be printed
 
         //these should not even compile
         when(true).when(false);
+        when(true).orElseThrow(RuntimeException::new);
         when(true).then(TestHelper::printFoo).then(TestHelper::printBar);
         given("a string").given("another");
         given("a string").then(TestHelper::printBar);
         int result1 = when(TestHelper::somethingIsTrue)
                 .thenReturn(TestHelper::getHighNumber);
+        int result2 = when(true).then(TestHelper::printFoo).orElse(1);
+    }
 
+    static boolean veryComplexCondition() {
+        System.out.println("Evaluating condition");
+        return true;
     }
 }

@@ -4,6 +4,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+@SuppressWarnings("SameParameterValue")
 public interface FluentConditionals {
 
     Runnable doNothing = () -> {};
