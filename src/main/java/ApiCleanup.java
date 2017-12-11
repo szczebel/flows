@@ -27,6 +27,7 @@ public class ApiCleanup {
         int result1 = when(TestHelper::somethingIsTrue)
                 .thenReturn(TestHelper::getHighNumber);
         int result2 = when(true).then(TestHelper::printFoo).orElse(1);
+        int result3 = when(true).then(TestHelper::printFoo).orElse(TestHelper::printBar);
     }
 
     static boolean veryComplexCondition() {
