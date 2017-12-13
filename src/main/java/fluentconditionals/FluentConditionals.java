@@ -25,12 +25,12 @@ public interface FluentConditionals {
         return when(() -> condition);
     }
 
-    static <T> Parametrized<T> given(T parameter) {
+    static <T> Given<T> given(T parameter) {
         return given(() -> parameter);
     }
 
-    static <T> Parametrized<T> given(Supplier<T> parameter) {
-        return new Parametrized.Impl<>(parameter);
+    static <T> Given<T> given(Supplier<T> parameter) {
+        return new Given.Impl<>(parameter);
     }
 
     //middle tier -----------------------------------------------------------------------------------------------
@@ -70,14 +70,14 @@ public interface FluentConditionals {
         }
     }
 
-    interface Parametrized<T> {
-        ParametrizedFlowEntry<T> when(Supplier<Boolean> condition);
+    interface Given<T> {
+        GivenFlowEntry<T> when(Supplier<Boolean> condition);
 
-        default ParametrizedFlowEntry<T> when(boolean condition) {
+        default GivenFlowEntry<T> when(boolean condition) {
             return when(() -> condition);
         }
 
-        class Impl<T> implements Parametrized<T> {
+        class Impl<T> implements Given<T> {
 
             private final Supplier<T> parameter;
 
@@ -86,20 +86,20 @@ public interface FluentConditionals {
             }
 
             @Override
-            public ParametrizedFlowEntry<T> when(Supplier<Boolean> condition) {
-                return new ParametrizedFlowEntry.Impl<>(condition, parameter);
+            public GivenFlowEntry<T> when(Supplier<Boolean> condition) {
+                return new GivenFlowEntry.Impl<>(condition, parameter);
             }
         }
     }
 
-    interface ParametrizedFlowEntry<T> {
+    interface GivenFlowEntry<T> {
         ConsumerConclusion<T> then(Consumer<T> consumer);
         <R> FunctionConclusion<T, R> thenReturn(Function<T, R> function);
         default <R> FunctionConclusion<T, R> thenReturn(Supplier<R> supplier) {
             return thenReturn(t -> supplier.get());
         }
 
-        class Impl<T> implements ParametrizedFlowEntry<T> {
+        class Impl<T> implements GivenFlowEntry<T> {
 
             private final Supplier<Boolean> condition;
             private final Supplier<T> parameter;
