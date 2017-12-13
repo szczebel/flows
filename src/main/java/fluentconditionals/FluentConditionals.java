@@ -29,6 +29,7 @@ public interface FluentConditionals {
         return new Parametrized.Impl<>(parameter);
     }
 
+
     interface FlowEntry {
         VoidConclusion then(Runnable action);
 
@@ -116,119 +117,8 @@ public interface FluentConditionals {
         }
     }
 
-    interface FunctionConclusion<T, R> extends ReturningConclusion<R> {
-        R orElse(Function<T, R> elseFunction);
 
-        default R orElse(Supplier<R> elseSupplier) {
-            return orElse(t -> elseSupplier.get());
-        }
-
-        default R orElse(R value) {
-            return orElse(t -> value);
-        }
-
-        class Impl<T,R> extends ReturningConclusion.Impl<R> implements FunctionConclusion<T, R> {
-
-            private final Function<T, R> function;
-            private final Supplier<T> parameter;
-
-            Impl(Supplier<Boolean> condition, Function<T, R> function, Supplier<T> parameter) {
-                super(condition);
-                this.function = function;
-                this.parameter = parameter;
-            }
-
-            @Override
-            public R orElse(Function<T, R> elseFunction) {
-                return evaluateConditionAndConclude(()-> elseFunction.apply(parameter.get()));
-            }
-
-            @Override
-            R happyPath() {
-                return function.apply(parameter.get());
-            }
-        }
-    }
-
-    interface ConsumerConclusion<T> extends Conclusion {
-        void orElse(Consumer<T> elseConsumer);
-
-        class Impl<T> extends Conclusion.Impl implements ConsumerConclusion<T> {
-
-            private final Consumer<T> consumer;
-            private final Supplier<T> parameter;
-
-            Impl(Supplier<Boolean> condition, Consumer<T> consumer, Supplier<T> parameter) {
-                super(condition);
-                this.consumer = consumer;
-                this.parameter = parameter;
-            }
-
-            @Override
-            public void orElse(Consumer<T> elseConsumer) {
-                evaluateConditionAndConclude(() -> elseConsumer.accept(parameter.get()));
-            }
-
-            @Override
-            protected void happyPath() {
-                consumer.accept(parameter.get());
-            }
-        }
-    }
-
-    interface SupplierConclusion<T> extends ReturningConclusion<T> {
-
-        T orElse(Supplier<T> elseSupplier);
-
-        default T orElse(T elseValue) {
-            return orElse(() -> elseValue);
-        }
-
-        class Impl<T> extends ReturningConclusion.Impl<T> implements SupplierConclusion<T> {
-
-            private final Supplier<T> supplier;
-
-            Impl(Supplier<Boolean> condition, Supplier<T> supplier) {
-                super(condition);
-                this.supplier = supplier;
-            }
-
-            @Override
-            public T orElse(Supplier<T> elseSupplier) {
-                return evaluateConditionAndConclude(elseSupplier);
-            }
-
-            T happyPath() {
-                return supplier.get();
-            }
-        }
-
-    }
-
-    interface VoidConclusion extends Conclusion {
-        void orElse(Runnable action);
-
-        class Impl extends Conclusion.Impl implements VoidConclusion {
-
-            private final Runnable action;
-
-            Impl(Supplier<Boolean> condition, Runnable action) {
-                super(condition);
-                this.action = action;
-            }
-
-            @Override
-            public void orElse(Runnable elseAction) {
-                evaluateConditionAndConclude(elseAction);
-            }
-
-            @Override
-            protected void happyPath() {
-                action.run();
-            }
-        }
-    }
-
+    //conclusions
     interface Conclusion {
         default <Ex extends Throwable> void orElseThrow(Function<String, Ex> throwable, String exceptionMessage) throws Ex {
             orElseThrow(() -> throwable.apply(exceptionMessage));
@@ -294,6 +184,121 @@ public interface FluentConditionals {
             }
 
             abstract R happyPath();
+        }
+    }
+
+
+    interface ConsumerConclusion<T> extends Conclusion {
+        void orElse(Consumer<T> elseConsumer);
+
+        class Impl<T> extends Conclusion.Impl implements ConsumerConclusion<T> {
+
+            private final Consumer<T> consumer;
+            private final Supplier<T> parameter;
+
+            Impl(Supplier<Boolean> condition, Consumer<T> consumer, Supplier<T> parameter) {
+                super(condition);
+                this.consumer = consumer;
+                this.parameter = parameter;
+            }
+
+            @Override
+            public void orElse(Consumer<T> elseConsumer) {
+                evaluateConditionAndConclude(() -> elseConsumer.accept(parameter.get()));
+            }
+
+            @Override
+            protected void happyPath() {
+                consumer.accept(parameter.get());
+            }
+        }
+    }
+
+    interface VoidConclusion extends Conclusion {
+        void orElse(Runnable action);
+
+        class Impl extends Conclusion.Impl implements VoidConclusion {
+
+            private final Runnable action;
+
+            Impl(Supplier<Boolean> condition, Runnable action) {
+                super(condition);
+                this.action = action;
+            }
+
+            @Override
+            public void orElse(Runnable elseAction) {
+                evaluateConditionAndConclude(elseAction);
+            }
+
+            @Override
+            protected void happyPath() {
+                action.run();
+            }
+        }
+    }
+
+
+    interface SupplierConclusion<T> extends ReturningConclusion<T> {
+
+        T orElse(Supplier<T> elseSupplier);
+
+        default T orElse(T elseValue) {
+            return orElse(() -> elseValue);
+        }
+
+        class Impl<T> extends ReturningConclusion.Impl<T> implements SupplierConclusion<T> {
+
+            private final Supplier<T> supplier;
+
+            Impl(Supplier<Boolean> condition, Supplier<T> supplier) {
+                super(condition);
+                this.supplier = supplier;
+            }
+
+            @Override
+            public T orElse(Supplier<T> elseSupplier) {
+                return evaluateConditionAndConclude(elseSupplier);
+            }
+
+            T happyPath() {
+                return supplier.get();
+            }
+        }
+
+    }
+
+    interface FunctionConclusion<T, R> extends ReturningConclusion<R> {
+        R orElse(Function<T, R> elseFunction);
+
+        default R orElse(Supplier<R> elseSupplier) {
+            return orElse(t -> elseSupplier.get());
+        }
+
+        default R orElse(R value) {
+            return orElse(t -> value);
+        }
+
+        class Impl<T,R> extends ReturningConclusion.Impl<R> implements FunctionConclusion<T, R> {
+
+            private final Function<T, R> function;
+            private final Supplier<T> parameter;
+
+            Impl(Supplier<Boolean> condition, Function<T, R> function, Supplier<T> parameter) {
+                super(condition);
+                this.function = function;
+                this.parameter = parameter;
+            }
+
+            @Override
+            public R orElse(Function<T, R> elseFunction) {
+                return evaluateConditionAndConclude(()-> elseFunction.apply(parameter.get()));
+            }
+
+            @Override
+            R happyPath() {
+                return function.apply(parameter.get());
+            }
         }
     }
 }
