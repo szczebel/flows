@@ -16,7 +16,7 @@ public class EnhancedExceptions {
 
         when(TestHelper::somethingIsTrue)
                 .then(doNothing)
-                .orElseThrow(RuntimeException::new, "Exception message");
+                .orElseThrow(OutOfMemoryError::new, "Exception message");
 
         when(TestHelper::somethingIsTrue)
                 .thenThrow(RuntimeException::new, "This was expected");
