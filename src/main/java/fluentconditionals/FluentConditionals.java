@@ -121,7 +121,6 @@ public interface FluentConditionals {
         }
     }
 
-
     //conclusions -----------------------------------------------------------------------------------------------
 
     interface Conclusion {
