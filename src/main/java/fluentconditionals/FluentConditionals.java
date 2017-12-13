@@ -7,11 +7,15 @@ import java.util.function.Supplier;
 @SuppressWarnings("SameParameterValue")
 public interface FluentConditionals {
 
+    //reusable constants ---------------------------------------------------------------------------------------
+
     Runnable doNothing = () -> {};
 
     static <T> Consumer<T> doNothing() {
         return t -> {};
     }
+
+    //entry points ----------------------------------------------------------------------------------------------
 
     static FlowEntry when(Supplier<Boolean> condition) {
         return new FlowEntry.Impl(condition);
@@ -29,6 +33,7 @@ public interface FluentConditionals {
         return new Parametrized.Impl<>(parameter);
     }
 
+    //middle tier -----------------------------------------------------------------------------------------------
 
     interface FlowEntry {
         VoidConclusion then(Runnable action);
@@ -63,7 +68,6 @@ public interface FluentConditionals {
                 if(condition.get()) throw exceptionFactory.apply(exceptionMessage);
             }
         }
-
     }
 
     interface Parametrized<T> {
@@ -118,7 +122,8 @@ public interface FluentConditionals {
     }
 
 
-    //conclusions
+    //conclusions -----------------------------------------------------------------------------------------------
+
     interface Conclusion {
         default <Ex extends Throwable> void orElseThrow(Function<String, Ex> throwable, String exceptionMessage) throws Ex {
             orElseThrow(() -> throwable.apply(exceptionMessage));
