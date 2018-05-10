@@ -17,11 +17,11 @@ public interface FluentConditionals {
 
     //entry points ----------------------------------------------------------------------------------------------
 
-    static FlowEntry when(Supplier<Boolean> condition) {
-        return new FlowEntry.Impl(condition);
+    static When when(Supplier<Boolean> condition) {
+        return new When.Impl(condition);
     }
 
-    static FlowEntry when(boolean condition) {
+    static When when(boolean condition) {
         return when(() -> condition);
     }
 
@@ -35,7 +35,7 @@ public interface FluentConditionals {
 
     //middle tier -----------------------------------------------------------------------------------------------
 
-    interface FlowEntry {
+    interface When {
         VoidConclusion then(Runnable action);
 
         <T> SupplierConclusion<T> thenReturn(Supplier<T> supplier);
@@ -45,7 +45,7 @@ public interface FluentConditionals {
 
         <Ex extends Throwable> void thenThrow(Function<String, Ex> exceptionFactory, String exceptionMessage) throws Ex;
 
-        class Impl implements FlowEntry {
+        class Impl implements When {
 
             private final Supplier<Boolean> condition;
 
@@ -71,9 +71,9 @@ public interface FluentConditionals {
     }
 
     interface Given<T> {
-        GivenFlowEntry<T> when(Supplier<Boolean> condition);
+        GivenWhen<T> when(Supplier<Boolean> condition);
 
-        default GivenFlowEntry<T> when(boolean condition) {
+        default GivenWhen<T> when(boolean condition) {
             return when(() -> condition);
         }
 
@@ -86,20 +86,20 @@ public interface FluentConditionals {
             }
 
             @Override
-            public GivenFlowEntry<T> when(Supplier<Boolean> condition) {
-                return new GivenFlowEntry.Impl<>(condition, parameter);
+            public GivenWhen<T> when(Supplier<Boolean> condition) {
+                return new GivenWhen.Impl<>(condition, parameter);
             }
         }
     }
 
-    interface GivenFlowEntry<T> {
+    interface GivenWhen<T> {
         ConsumerConclusion<T> then(Consumer<T> consumer);
         <R> FunctionConclusion<T, R> thenReturn(Function<T, R> function);
         default <R> FunctionConclusion<T, R> thenReturn(Supplier<R> supplier) {
             return thenReturn(t -> supplier.get());
         }
 
-        class Impl<T> implements GivenFlowEntry<T> {
+        class Impl<T> implements GivenWhen<T> {
 
             private final Supplier<Boolean> condition;
             private final Supplier<T> parameter;
