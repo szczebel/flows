@@ -36,10 +36,10 @@ public interface FluentConditionals {
     //middle tier -----------------------------------------------------------------------------------------------
 
     interface When {
-        VoidConclusion then(Runnable action);
+        WhenThenExecute then(Runnable action);
 
-        <T> SupplierConclusion<T> thenReturn(Supplier<T> supplier);
-        default <T> SupplierConclusion<T> thenReturn(T value) {
+        <T> WhenThenReturn<T> thenReturn(Supplier<T> supplier);
+        default <T> WhenThenReturn<T> thenReturn(T value) {
             return thenReturn(() -> value);
         }
 
@@ -54,13 +54,13 @@ public interface FluentConditionals {
             }
 
             @Override
-            public VoidConclusion then(Runnable action) {
-                return new VoidConclusion.Impl(condition, action);
+            public WhenThenExecute then(Runnable action) {
+                return new WhenThenExecute.Impl(condition, action);
             }
 
             @Override
-            public <T> SupplierConclusion<T> thenReturn(Supplier<T> supplier) {
-                return new SupplierConclusion.Impl<>(condition, supplier);
+            public <T> WhenThenReturn<T> thenReturn(Supplier<T> supplier) {
+                return new WhenThenReturn.Impl<>(condition, supplier);
             }
 
             @Override
@@ -93,9 +93,9 @@ public interface FluentConditionals {
     }
 
     interface GivenWhen<T> {
-        ConsumerConclusion<T> then(Consumer<T> consumer);
-        <R> FunctionConclusion<T, R> thenReturn(Function<T, R> function);
-        default <R> FunctionConclusion<T, R> thenReturn(Supplier<R> supplier) {
+        GivenWhenThenExecute<T> then(Consumer<T> consumer);
+        <R> GivenWhenThenReturn<T, R> thenReturn(Function<T, R> function);
+        default <R> GivenWhenThenReturn<T, R> thenReturn(Supplier<R> supplier) {
             return thenReturn(t -> supplier.get());
         }
 
@@ -110,20 +110,21 @@ public interface FluentConditionals {
             }
 
             @Override
-            public ConsumerConclusion<T> then(Consumer<T> consumer) {
-                return new ConsumerConclusion.Impl<>(condition, consumer, parameter);
+            public GivenWhenThenExecute<T> then(Consumer<T> consumer) {
+                return new GivenWhenThenExecute.Impl<>(condition, consumer, parameter);
             }
 
             @Override
-            public <R> FunctionConclusion<T, R> thenReturn(Function<T, R> function) {
-                return new FunctionConclusion.Impl<>(condition, function, parameter);
+            public <R> GivenWhenThenReturn<T, R> thenReturn(Function<T, R> function) {
+                return new GivenWhenThenReturn.Impl<>(condition, function, parameter);
             }
         }
     }
 
     //conclusions -----------------------------------------------------------------------------------------------
 
-    interface Conclusion {
+    //base
+    interface Throwing {
         default <Ex extends Throwable> void orElseThrow(Function<String, Ex> throwable, String exceptionMessage) throws Ex {
             orElseThrow(() -> throwable.apply(exceptionMessage));
         }
@@ -133,7 +134,7 @@ public interface FluentConditionals {
             orElseThrow(() -> throwable);
         }
 
-        abstract class Impl implements Conclusion {
+        abstract class Impl implements Throwing {
 
             private final Supplier<Boolean> condition;
 
@@ -157,7 +158,7 @@ public interface FluentConditionals {
         }
     }
 
-    interface ReturningConclusion<R> {
+    interface ReturningOrThrowing<R> {
         default <Ex extends Throwable> R orElseThrow(Function<String, Ex> throwable, String exceptionMessage) throws Ex {
             return orElseThrow(() -> throwable.apply(exceptionMessage));
         }
@@ -168,7 +169,7 @@ public interface FluentConditionals {
             return orElseThrow(() -> throwable);
         }
 
-        abstract class Impl<R> implements ReturningConclusion<R> {
+        abstract class Impl<R> implements ReturningOrThrowing<R> {
 
             private final Supplier<Boolean> condition;
 
@@ -191,11 +192,35 @@ public interface FluentConditionals {
         }
     }
 
+    //concrete
+    interface WhenThenExecute extends Throwing {
+        void orElse(Runnable action);
 
-    interface ConsumerConclusion<T> extends Conclusion {
+        class Impl extends Throwing.Impl implements WhenThenExecute {
+
+            private final Runnable action;
+
+            Impl(Supplier<Boolean> condition, Runnable action) {
+                super(condition);
+                this.action = action;
+            }
+
+            @Override
+            public void orElse(Runnable elseAction) {
+                evaluateConditionAndConclude(elseAction);
+            }
+
+            @Override
+            protected void happyPath() {
+                action.run();
+            }
+        }
+    }
+
+    interface GivenWhenThenExecute<T> extends Throwing {
         void orElse(Consumer<T> elseConsumer);
 
-        class Impl<T> extends Conclusion.Impl implements ConsumerConclusion<T> {
+        class Impl<T> extends Throwing.Impl implements GivenWhenThenExecute<T> {
 
             private final Consumer<T> consumer;
             private final Supplier<T> parameter;
@@ -218,32 +243,7 @@ public interface FluentConditionals {
         }
     }
 
-    interface VoidConclusion extends Conclusion {
-        void orElse(Runnable action);
-
-        class Impl extends Conclusion.Impl implements VoidConclusion {
-
-            private final Runnable action;
-
-            Impl(Supplier<Boolean> condition, Runnable action) {
-                super(condition);
-                this.action = action;
-            }
-
-            @Override
-            public void orElse(Runnable elseAction) {
-                evaluateConditionAndConclude(elseAction);
-            }
-
-            @Override
-            protected void happyPath() {
-                action.run();
-            }
-        }
-    }
-
-
-    interface SupplierConclusion<T> extends ReturningConclusion<T> {
+    interface WhenThenReturn<T> extends ReturningOrThrowing<T> {
 
         T orElse(Supplier<T> elseSupplier);
 
@@ -251,7 +251,7 @@ public interface FluentConditionals {
             return orElse(() -> elseValue);
         }
 
-        class Impl<T> extends ReturningConclusion.Impl<T> implements SupplierConclusion<T> {
+        class Impl<T> extends ReturningOrThrowing.Impl<T> implements WhenThenReturn<T> {
 
             private final Supplier<T> supplier;
 
@@ -272,7 +272,7 @@ public interface FluentConditionals {
 
     }
 
-    interface FunctionConclusion<T, R> extends ReturningConclusion<R> {
+    interface GivenWhenThenReturn<T, R> extends ReturningOrThrowing<R> {
         R orElse(Function<T, R> elseFunction);
 
         default R orElse(Supplier<R> elseSupplier) {
@@ -283,7 +283,7 @@ public interface FluentConditionals {
             return orElse(t -> value);
         }
 
-        class Impl<T,R> extends ReturningConclusion.Impl<R> implements FunctionConclusion<T, R> {
+        class Impl<T,R> extends ReturningOrThrowing.Impl<R> implements GivenWhenThenReturn<T, R> {
 
             private final Function<T, R> function;
             private final Supplier<T> parameter;
