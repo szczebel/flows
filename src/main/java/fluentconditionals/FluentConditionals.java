@@ -1,5 +1,6 @@
 package fluentconditionals;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -17,7 +18,7 @@ public interface FluentConditionals {
 
     //entry points ----------------------------------------------------------------------------------------------
 
-    static When when(Supplier<Boolean> condition) {
+    static When when(BooleanSupplier condition) {
         return new When.Impl(condition);
     }
 
@@ -25,11 +26,11 @@ public interface FluentConditionals {
         return when(() -> condition);
     }
 
-    static <T> Given<T> given(T parameter) {
+    static <ParameterType> Given<ParameterType> given(ParameterType parameter) {
         return given(() -> parameter);
     }
 
-    static <T> Given<T> given(Supplier<T> parameter) {
+    static <ParameterType> Given<ParameterType> given(Supplier<ParameterType> parameter) {
         return new Given.Impl<>(parameter);
     }
 
@@ -38,18 +39,18 @@ public interface FluentConditionals {
     interface When {
         WhenThenExecute then(Runnable action);
 
-        <T> WhenThenReturn<T> thenReturn(Supplier<T> supplier);
-        default <T> WhenThenReturn<T> thenReturn(T value) {
+        <ReturnType> WhenThenReturn<ReturnType> thenReturn(Supplier<ReturnType> supplier);
+        default <ReturnType> WhenThenReturn<ReturnType> thenReturn(ReturnType value) {
             return thenReturn(() -> value);
         }
 
-        <Ex extends Throwable> void thenThrow(Function<String, Ex> exceptionFactory, String exceptionMessage) throws Ex;
+        <ExceptionType extends Throwable> void thenThrow(Function<String, ExceptionType> exceptionFactory, String exceptionMessage) throws ExceptionType;
 
         class Impl implements When {
 
-            private final Supplier<Boolean> condition;
+            private final BooleanSupplier condition;
 
-            Impl(Supplier<Boolean> condition) {
+            Impl(BooleanSupplier condition) {
                 this.condition = condition;
             }
 
@@ -59,63 +60,63 @@ public interface FluentConditionals {
             }
 
             @Override
-            public <T> WhenThenReturn<T> thenReturn(Supplier<T> supplier) {
+            public <ReturnType> WhenThenReturn<ReturnType> thenReturn(Supplier<ReturnType> supplier) {
                 return new WhenThenReturn.Impl<>(condition, supplier);
             }
 
             @Override
-            public <Ex extends Throwable> void thenThrow(Function<String, Ex> exceptionFactory, String exceptionMessage) throws Ex {
-                if(condition.get()) throw exceptionFactory.apply(exceptionMessage);
+            public <ExceptionType extends Throwable> void thenThrow(Function<String, ExceptionType> exceptionFactory, String exceptionMessage) throws ExceptionType {
+                if(condition.getAsBoolean()) throw exceptionFactory.apply(exceptionMessage);
             }
         }
     }
 
-    interface Given<T> {
-        GivenWhen<T> when(Supplier<Boolean> condition);
+    interface Given<ParameterType> {
+        GivenWhen<ParameterType> when(BooleanSupplier condition);
 
-        default GivenWhen<T> when(boolean condition) {
+        default GivenWhen<ParameterType> when(boolean condition) {
             return when(() -> condition);
         }
 
-        class Impl<T> implements Given<T> {
+        class Impl<ParameterType> implements Given<ParameterType> {
 
-            private final Supplier<T> parameter;
+            private final Supplier<ParameterType> parameter;
 
-            Impl(Supplier<T> parameter) {
+            Impl(Supplier<ParameterType> parameter) {
                 this.parameter = parameter;
             }
 
             @Override
-            public GivenWhen<T> when(Supplier<Boolean> condition) {
+            public GivenWhen<ParameterType> when(BooleanSupplier condition) {
                 return new GivenWhen.Impl<>(condition, parameter);
             }
         }
     }
 
-    interface GivenWhen<T> {
-        GivenWhenThenExecute<T> then(Consumer<T> consumer);
-        <R> GivenWhenThenReturn<T, R> thenReturn(Function<T, R> function);
-        default <R> GivenWhenThenReturn<T, R> thenReturn(Supplier<R> supplier) {
+    interface GivenWhen<ParameterType> {
+        GivenWhenThenExecute<ParameterType> then(Consumer<ParameterType> consumer);
+        <ReturnType> GivenWhenThenReturn<ParameterType, ReturnType> thenReturn(Function<ParameterType, ReturnType> function);
+        default <ReturnType> GivenWhenThenReturn<ParameterType, ReturnType> thenReturn(Supplier<ReturnType> supplier) {
             return thenReturn(t -> supplier.get());
         }
 
-        class Impl<T> implements GivenWhen<T> {
+        class Impl<ParameterType> implements GivenWhen<ParameterType> {
 
-            private final Supplier<Boolean> condition;
-            private final Supplier<T> parameter;
+            private final BooleanSupplier condition;
+            private final Supplier<ParameterType> parameter;
 
-            Impl(Supplier<Boolean> condition, Supplier<T> parameter) {
+            Impl(BooleanSupplier condition, Supplier<ParameterType> parameter) {
                 this.condition = condition;
                 this.parameter = parameter;
             }
 
             @Override
-            public GivenWhenThenExecute<T> then(Consumer<T> consumer) {
+            public GivenWhenThenExecute<ParameterType> then(Consumer<ParameterType> consumer) {
                 return new GivenWhenThenExecute.Impl<>(condition, consumer, parameter);
             }
 
             @Override
-            public <R> GivenWhenThenReturn<T, R> thenReturn(Function<T, R> function) {
+            public <ReturnType> GivenWhenThenReturn<ParameterType, ReturnType> thenReturn(Function<ParameterType, ReturnType> function) {
                 return new GivenWhenThenReturn.Impl<>(condition, function, parameter);
             }
         }
@@ -125,31 +126,31 @@ public interface FluentConditionals {
 
     //base
     interface Throwing {
-        default <Ex extends Throwable> void orElseThrow(Function<String, Ex> throwable, String exceptionMessage) throws Ex {
+        default <ExceptionType extends Throwable> void orElseThrow(Function<String, ExceptionType> throwable, String exceptionMessage) throws ExceptionType {
             orElseThrow(() -> throwable.apply(exceptionMessage));
         }
-        <Ex extends Throwable> void orElseThrow(Supplier<Ex> throwable) throws Ex;
+        <ExceptionType extends Throwable> void orElseThrow(Supplier<ExceptionType> throwable) throws ExceptionType;
 
-        default <Ex extends Throwable> void orElseThrowE(Ex throwable) throws Ex {
+        default <ExceptionType extends Throwable> void orElseThrowE(ExceptionType throwable) throws ExceptionType {
             orElseThrow(() -> throwable);
         }
 
         abstract class Impl implements Throwing {
 
-            private final Supplier<Boolean> condition;
+            private final BooleanSupplier condition;
 
-            Impl(Supplier<Boolean> condition) {
+            Impl(BooleanSupplier condition) {
                 this.condition = condition;
             }
 
             @Override
-            public <Ex extends Throwable> void orElseThrow(Supplier<Ex> throwable) throws Ex {
-                if (condition.get()) happyPath();
+            public <ExceptionType extends Throwable> void orElseThrow(Supplier<ExceptionType> throwable) throws ExceptionType {
+                if (condition.getAsBoolean()) happyPath();
                 else throw throwable.get();
             }
 
             void evaluateConditionAndConclude(Runnable negativePath){
-                if(condition.get()) happyPath();
+                if(condition.getAsBoolean()) happyPath();
                 else negativePath.run();
             }
 
@@ -158,37 +159,37 @@ public interface FluentConditionals {
         }
     }
 
-    interface ReturningOrThrowing<R> {
-        default <Ex extends Throwable> R orElseThrow(Function<String, Ex> throwable, String exceptionMessage) throws Ex {
+    interface ReturningOrThrowing<ReturnType> {
+        default <ExceptionType extends Throwable> ReturnType orElseThrow(Function<String, ExceptionType> throwable, String exceptionMessage) throws ExceptionType {
             return orElseThrow(() -> throwable.apply(exceptionMessage));
         }
 
-        <Ex extends Throwable> R orElseThrow(Supplier<Ex> throwable) throws Ex;
+        <ExceptionType extends Throwable> ReturnType orElseThrow(Supplier<ExceptionType> throwable) throws ExceptionType;
 
-        default <Ex extends Throwable> R orElseThrowE(Ex throwable) throws Ex {
+        default <ExceptionType extends Throwable> ReturnType orElseThrowE(ExceptionType throwable) throws ExceptionType {
             return orElseThrow(() -> throwable);
         }
 
-        abstract class Impl<R> implements ReturningOrThrowing<R> {
+        abstract class Impl<ReturnType> implements ReturningOrThrowing<ReturnType> {
 
-            private final Supplier<Boolean> condition;
+            private final BooleanSupplier condition;
 
-            Impl(Supplier<Boolean> condition) {
+            Impl(BooleanSupplier condition) {
                 this.condition = condition;
             }
 
             @Override
-            public <Ex extends Throwable> R orElseThrow(Supplier<Ex> throwable) throws Ex {
-                if (condition.get()) return happyPath();
+            public <ExceptionType extends Throwable> ReturnType orElseThrow(Supplier<ExceptionType> throwable) throws ExceptionType {
+                if (condition.getAsBoolean()) return happyPath();
                 else throw throwable.get();
             }
 
-            R evaluateConditionAndConclude(Supplier<R> negativePath) {
-                if(condition.get()) return happyPath();
+            ReturnType evaluateConditionAndConclude(Supplier<ReturnType> negativePath) {
+                if(condition.getAsBoolean()) return happyPath();
                 else return negativePath.get();
             }
 
-            abstract R happyPath();
+            abstract ReturnType happyPath();
         }
     }
 
@@ -200,7 +201,7 @@ public interface FluentConditionals {
 
             private final Runnable action;
 
-            Impl(Supplier<Boolean> condition, Runnable action) {
+            Impl(BooleanSupplier condition, Runnable action) {
                 super(condition);
                 this.action = action;
             }
@@ -217,22 +218,22 @@ public interface FluentConditionals {
         }
     }
 
-    interface GivenWhenThenExecute<T> extends Throwing {
-        void orElse(Consumer<T> elseConsumer);
+    interface GivenWhenThenExecute<ParameterType> extends Throwing {
+        void orElse(Consumer<ParameterType> elseConsumer);
 
-        class Impl<T> extends Throwing.Impl implements GivenWhenThenExecute<T> {
+        class Impl<ParameterType> extends Throwing.Impl implements GivenWhenThenExecute<ParameterType> {
 
-            private final Consumer<T> consumer;
-            private final Supplier<T> parameter;
+            private final Consumer<ParameterType> consumer;
+            private final Supplier<ParameterType> parameter;
 
-            Impl(Supplier<Boolean> condition, Consumer<T> consumer, Supplier<T> parameter) {
+            Impl(BooleanSupplier condition, Consumer<ParameterType> consumer, Supplier<ParameterType> parameter) {
                 super(condition);
                 this.consumer = consumer;
                 this.parameter = parameter;
             }
 
             @Override
-            public void orElse(Consumer<T> elseConsumer) {
+            public void orElse(Consumer<ParameterType> elseConsumer) {
                 evaluateConditionAndConclude(() -> elseConsumer.accept(parameter.get()));
             }
 
@@ -243,64 +244,64 @@ public interface FluentConditionals {
         }
     }
 
-    interface WhenThenReturn<T> extends ReturningOrThrowing<T> {
+    interface WhenThenReturn<ReturnType> extends ReturningOrThrowing<ReturnType> {
 
-        T orElse(Supplier<T> elseSupplier);
+        ReturnType orElse(Supplier<ReturnType> elseSupplier);
 
-        default T orElse(T elseValue) {
+        default ReturnType orElse(ReturnType elseValue) {
             return orElse(() -> elseValue);
         }
 
-        class Impl<T> extends ReturningOrThrowing.Impl<T> implements WhenThenReturn<T> {
+        class Impl<ReturnType> extends ReturningOrThrowing.Impl<ReturnType> implements WhenThenReturn<ReturnType> {
 
-            private final Supplier<T> supplier;
+            private final Supplier<ReturnType> supplier;
 
-            Impl(Supplier<Boolean> condition, Supplier<T> supplier) {
+            Impl(BooleanSupplier condition, Supplier<ReturnType> supplier) {
                 super(condition);
                 this.supplier = supplier;
             }
 
             @Override
-            public T orElse(Supplier<T> elseSupplier) {
+            public ReturnType orElse(Supplier<ReturnType> elseSupplier) {
                 return evaluateConditionAndConclude(elseSupplier);
             }
 
-            T happyPath() {
+            ReturnType happyPath() {
                 return supplier.get();
             }
         }
 
     }
 
-    interface GivenWhenThenReturn<T, R> extends ReturningOrThrowing<R> {
-        R orElse(Function<T, R> elseFunction);
+    interface GivenWhenThenReturn<ParameterType, ReturnType> extends ReturningOrThrowing<ReturnType> {
+        ReturnType orElse(Function<ParameterType, ReturnType> elseFunction);
 
-        default R orElse(Supplier<R> elseSupplier) {
+        default ReturnType orElse(Supplier<ReturnType> elseSupplier) {
             return orElse(t -> elseSupplier.get());
         }
 
-        default R orElse(R value) {
+        default ReturnType orElse(ReturnType value) {
             return orElse(t -> value);
         }
 
-        class Impl<T,R> extends ReturningOrThrowing.Impl<R> implements GivenWhenThenReturn<T, R> {
+        class Impl<ParameterType, ReturnType> extends ReturningOrThrowing.Impl<ReturnType> implements GivenWhenThenReturn<ParameterType, ReturnType> {
 
-            private final Function<T, R> function;
-            private final Supplier<T> parameter;
+            private final Function<ParameterType, ReturnType> function;
+            private final Supplier<ParameterType> parameter;
 
-            Impl(Supplier<Boolean> condition, Function<T, R> function, Supplier<T> parameter) {
+            Impl(BooleanSupplier condition, Function<ParameterType, ReturnType> function, Supplier<ParameterType> parameter) {
                 super(condition);
                 this.function = function;
                 this.parameter = parameter;
             }
 
             @Override
-            public R orElse(Function<T, R> elseFunction) {
+            public ReturnType orElse(Function<ParameterType, ReturnType> elseFunction) {
                 return evaluateConditionAndConclude(()-> elseFunction.apply(parameter.get()));
             }
 
             @Override
-            R happyPath() {
+            ReturnType happyPath() {
                 return function.apply(parameter.get());
             }
         }
